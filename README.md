@@ -1,38 +1,106 @@
-# sv
+# MyBlog SvelteKit Template
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A ready-to-go SvelteKit blog starter template integrating Supabase, Tailwind CSS (with Typography and Forms), DaisyUI, and Docker (with Docker Compose). It’s designed to help you quickly launch a production-ready blog with dynamic routes, markdown-style content formatting, and a seamless development workflow.
 
-## Creating a project
+## 🔑 Key Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+* **SvelteKit**: Server-side rendering (SSR) and filesystem-based routing for lightning-fast pages.
+* **Supabase**: Backend-as-a-Service for authentication and database (PostgreSQL) integration.
+* **Tailwind CSS**: Utility-first styling with:
+
+  * `@tailwindcss/typography` for elegant prose formatting.
+  * `@tailwindcss/forms` for consistent form element styles.
+* **DaisyUI**: Prebuilt Tailwind component library for buttons, cards, navbars, alerts, and themes.
+* **Dynamic Routing**: File-based routing with `[id]` folders for individual blog posts.
+* **Docker & Docker Compose**:
+
+  * **Dev Mode**: Live-reload dev server on port 5173.
+  * **Prod Mode**: SSR build on port 3000 with secure environment variable injection.
+* **Environment Config**: `.env` file for Supabase credentials (excluded from Git via `.gitignore`).
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+* Node.js >= v20
+* Docker & Docker Compose
+* A [Supabase](https://supabase.com) project with a `BlogPost` table (columns: `id`, `Title`, `Desc`, `Body`).
+
+### 1. Clone the repo
 
 ```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+git clone https://github.com/<your-username>/myblog-template.git
+cd myblog-template
 ```
 
-## Developing
+### 2. Configure environment
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Copy the example env file and fill in your Supabase credentials:
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+cp .env.example .env
+# Edit .env:
+# VITE_SUPABASE_URL=https://xyz.supabase.co
+# VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-## Building
+### 3. Development
 
-To create a production version of your app:
+Start the live-reload development server in Docker:
 
 ```bash
-npm run build
+docker-compose up --build
 ```
 
-You can preview the production build with `npm run preview`.
+* Dev UI: [http://localhost:5173](http://localhost:5173)
+* Changes to `.svelte`, JS, and CSS files reload instantly.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+### 4. Production Build
+
+Build and run the SSR app in Docker:
+
+```bash
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+* SSR UI: [http://localhost:3000](http://localhost:3000)
+
+## 📂 Project Structure
+
+```
+myblog-template/
+├── src/
+│   ├── lib/
+│   │   └── supabaseClient.js   # Supabase client setup
+│   └── routes/
+│       ├── +layout.svelte      # Global layout with navbar & footer
+│       ├── +page.svelte        # Home landing page
+│       └── blog/
+│           ├── +page.js        # Fetch list of posts
+│           ├── +page.svelte    # Render list of posts (cards)
+│           └── [id]/
+│               ├── +page.js    # Fetch single post
+│               └── +page.svelte# Post detail with `prose` styling
+├── app.css                     # Tailwind base, components, utilities
+├── tailwind.config.js          # Tailwind + DaisyUI + plugin config
+├── postcss.config.cjs          # PostCSS with Tailwind wrapper
+├── Dockerfile                  # Production Dockerfile
+├── Dockerfile.dev              # Dev Dockerfile with live reload
+├── docker-compose.yml          # Compose for dev
+├── docker-compose.prod.yml     # Compose for prod
+├── .env.example                # Example environment variables
+└── README.md                   # This file
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m "Add my feature"`)
+4. Push to branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+## 📜 License
+
+[MIT](LICENSE)
+
