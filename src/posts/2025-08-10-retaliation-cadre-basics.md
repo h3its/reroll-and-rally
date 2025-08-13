@@ -25,7 +25,6 @@ This post is intentionally loaded with different **Markdown** features to show w
 
 ## Formation diagram (image)
 
-![Retaliation Cadre diagram](/static/images/retaliation.jpg)
 
 _Pro tip: keep post assets under `/static/images/…` and reference them with absolute paths like `/images/…` so they work on every route._
 
