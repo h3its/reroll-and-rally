@@ -1,5 +1,4 @@
 version: '3.9'
-
 services:
   sveltekit:
     build:
@@ -9,6 +8,13 @@ services:
       - "5173:5173"
     volumes:
       - .:/app
-      - /app/node_modules # Prevent overwriting node_modules
-    env_file:
-      - .env
+      - dev_nodemods:/app/node_modules
+    environment:
+      - HOST=0.0.0.0
+    command: >
+      sh -lc 'if [ ! -d node_modules ] || [ -z "$$(ls -A node_modules 2>/dev/null)" ]; then
+        npm ci --include=optional;
+      fi && npx svelte-kit sync && npm run dev -- --host'
+volumes:
+  dev_nodemods:
+

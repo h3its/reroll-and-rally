@@ -8,7 +8,5 @@ export default {
     extend: {},
   },
   plugins: [forms, typography, daisyui],
-  daisyui: {
-    themes: ['forest'],
-  }
+  daisyui: {}
 }

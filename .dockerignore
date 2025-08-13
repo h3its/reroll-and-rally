@@ -1,4 +1,8 @@
 node_modules
 .svelte-kit
-build
-.env
+.git
+.gitignore
+Dockerfile
+Dockerfile.dev
+docker-compose*.yml
+.env*
