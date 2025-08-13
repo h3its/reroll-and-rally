@@ -1,0 +1,47 @@
+# fly.toml — Re-roll & Rally (SvelteKit static via Nginx)
+app = "reroll-and-rally"
+primary_region = "ewr"   # change if you prefer another region
+
+[build]
+  dockerfile = "Dockerfile"   # uses your prod Nginx Dockerfile at repo root
+
+# Scale-to-zero friendly defaults
+[deploy]
+  strategy = "rolling"
+
+[checks]
+  # optional: an extra app-level health check (services also have http_checks below)
+
+[[services]]
+  processes = ["app"]
+  protocol = "tcp"
+  internal_port = 80
+
+  # Public ports
+  [[services.ports]]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  # Health check against the Nginx-served site root
+  [[services.http_checks]]
+    interval = "15s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "2s"
+    tls_skip_verify = false
+
+  # Autoscaling-friendly settings (optional)
+  [services.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 75
+
+# VM sizing (optional; Fly will pick a default if omitted)
+[vm]
+  size = "shared-cpu-1x"
