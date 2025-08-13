@@ -1,106 +1,245 @@
-# MyBlog SvelteKit Template
+# Re-roll & Rally — SvelteKit Markdown Blog
 
-A ready-to-go SvelteKit blog starter template integrating Supabase, Tailwind CSS (with Typography and Forms), DaisyUI, and Docker (with Docker Compose). It’s designed to help you quickly launch a production-ready blog with dynamic routes, markdown-style content formatting, and a seamless development workflow.
+A fast, static Warhammer blog built with **SvelteKit**, **Tailwind CSS v4**, and **DaisyUI**.  
+Posts are plain **Markdown** files with simple front-matter. Dev runs in Docker; prod ships as a tiny Nginx image and deploys on **Fly.io** via GitHub Actions.
 
-## 🔑 Key Features
+---
 
-* **SvelteKit**: Server-side rendering (SSR) and filesystem-based routing for lightning-fast pages.
-* **Supabase**: Backend-as-a-Service for authentication and database (PostgreSQL) integration.
-* **Tailwind CSS**: Utility-first styling with:
+## Features
 
-  * `@tailwindcss/typography` for elegant prose formatting.
-  * `@tailwindcss/forms` for consistent form element styles.
-* **DaisyUI**: Prebuilt Tailwind component library for buttons, cards, navbars, alerts, and themes.
-* **Dynamic Routing**: File-based routing with `[id]` folders for individual blog posts.
-* **Docker & Docker Compose**:
+- 📝 Write posts in **Markdown** (`src/posts/*.md`) with front-matter
+- 🎨 **Tailwind v4** + **DaisyUI** styling out of the box
+- ⚡️ **Static** build with `@sveltejs/adapter-static`
+- 🧱 **Docker** dev environment (Vite hot reload)
+- 🚀 **Fly.io** deployment (Dockerfile + `fly.toml`)
+- 🔎 Built-in search on the blog index (client-side filter)
+- 🖼 Easy asset handling via `/static/images/...`
 
-  * **Dev Mode**: Live-reload dev server on port 5173.
-  * **Prod Mode**: SSR build on port 3000 with secure environment variable injection.
-* **Environment Config**: `.env` file for Supabase credentials (excluded from Git via `.gitignore`).
+---
 
-## 🚀 Quick Start
+## Stack
 
-### Prerequisites
+- **SvelteKit** `^2.x` (JS)
+- **Tailwind CSS v4** + `@tailwindcss/vite` + **DaisyUI**
+- **Marked** for Markdown
+- **Docker** (dev & prod) + **Nginx** (prod)
+- **Fly.io** (deploy)
 
-* Node.js >= v20
-* Docker & Docker Compose
-* A [Supabase](https://supabase.com) project with a `BlogPost` table (columns: `id`, `Title`, `Desc`, `Body`).
+---
 
-### 1. Clone the repo
+## Project Structure
+
+```
+.
+├─ src/
+│  ├─ app.css                # Tailwind v4 + plugins imports
+│  ├─ lib/
+│  │  └─ posts.js            # loads/parses markdown + front-matter
+│  ├─ posts/                 # your markdown posts (content!)
+│  └─ routes/
+│     ├─ +layout.svelte      # imports ../app.css, navbar/footer
+│     ├─ +page.svelte        # homepage
+│     └─ blog/
+│        ├─ +page.js         # returns { posts }
+│        ├─ +page.svelte     # blog index (cards + search)
+│        └─ [slug]/
+│           ├─ +page.js      # returns { post }
+│           └─ +page.svelte  # single post view
+├─ static/
+│  ├─ images/                # put images here, reference as /images/...
+│  └─ servoskull.svg
+├─ Dockerfile                # prod build: node:20-alpine -> nginx:alpine
+├─ Dockerfile.dev            # dev image for Vite server
+├─ docker-compose.yml        # dev (hot reload)
+├─ nginx.conf                # SPA-friendly nginx config
+├─ svelte.config.js          # adapter-static
+├─ vite.config.js            # sveltekit + tailwind vite plugin
+├─ fly.toml                  # Fly.io app config
+├─ package.json
+└─ .gitignore
+```
+
+---
+
+## Content Authoring
+
+Create files in `src/posts/` like:
+
+```md
+---
+title: T’au Retaliation Cadre — Showcase Post
+date: 2025-08-12
+tags: tau, tactics, 10th
+excerpt: Demo post showing markdown features.
+cover: /images/retaliation.jpg
+---
+
+# Heading
+
+Write in regular Markdown.  
+Images: `![alt](/images/your-image.jpg)` (put files under `static/images/`).
+```
+
+> **Tip:** Use **absolute** image paths (`/images/...`). Relative paths like `images/foo.jpg` will resolve differently on `/blog` vs `/blog/[slug]`.
+
+---
+
+## Local Development
+
+### Prereqs
+- Node 20+ (for non-Docker dev)  
+- Docker & Docker Compose v2 (recommended)
+
+### Option A — **Docker (recommended)**
+```bash
+# first run: populate node_modules in the dev volume and sync SvelteKit
+docker compose run --rm sveltekit sh -lc 'npm ci --include=optional && npx svelte-kit sync'
+
+# start dev server (Vite on :5173)
+docker compose up
+```
+Visit http://localhost:5173
+
+### Option B — Node (no Docker)
+```bash
+npm ci
+npm run dev
+```
+
+---
+
+## Build & Preview (static)
 
 ```bash
-git clone https://github.com/<your-username>/myblog-template.git
-cd myblog-template
+npm run build
+npm run preview
 ```
 
-### 2. Configure environment
+Static output is emitted to `build/`.
 
-Copy the example env file and fill in your Supabase credentials:
+---
+
+## Production (Docker + Nginx)
+
+Build and run locally:
+```bash
+docker build -t warhammer-blog .
+docker run --rm -p 8080:80 warhammer-blog
+# open http://localhost:8080
+```
+
+`Dockerfile` (multi-stage) builds the static site in Node and serves it via Nginx with SPA fallback and long-cache for assets.
+
+---
+
+## Deploy to Fly.io (GitHub Actions)
+
+1. Ensure `fly.toml` exists with your app name and Dockerfile:
+   ```toml
+   app = "warhammer-blog"
+   primary_region = "iad"
+
+   [build]
+     dockerfile = "Dockerfile"
+
+   [[services]]
+     internal_port = 80
+     protocol = "tcp"
+
+     [[services.ports]]
+       port = 80
+
+     [[services.ports]]
+       handlers = ["tls","http"]
+       port = 443
+   ```
+
+2. Add the GitHub Action: `.github/workflows/deploy.yml`
+   ```yaml
+   name: Deploy to Fly.io
+   on:
+     push:
+       branches: [ main ]
+   jobs:
+     deploy:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: superfly/flyctl-actions@1.5
+           with:
+             args: "deploy --remote-only"
+           env:
+             FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+   ```
+
+3. Create the token and save as repo secret:
+   ```bash
+   fly auth token
+   ```
+   GitHub → Settings → Secrets → Actions → **New repository secret**  
+   Name: `FLY_API_TOKEN` → paste the token.
+
+Each push to `main` builds and deploys.
+
+---
+
+## Tailwind / DaisyUI Setup
+
+- `src/app.css`:
+  ```css
+  @import "tailwindcss";
+  @plugin "@tailwindcss/forms";
+  @plugin "@tailwindcss/typography";
+  @plugin "daisyui";
+  ```
+- `vite.config.js`:
+  ```js
+  import { sveltekit } from '@sveltejs/kit/vite';
+  import tailwindcss from '@tailwindcss/vite';
+  export default { plugins: [tailwindcss(), sveltekit()] };
+  ```
+- Import CSS in root layout:
+  ```svelte
+  <script>import '../app.css';</script>
+  ```
+
+No `tailwind.config.*` is required for v4 (file-based). Add one later if you want custom themes.
+
+---
+
+## Scripts
 
 ```bash
-cp .env.example .env
-# Edit .env:
-# VITE_SUPABASE_URL=https://xyz.supabase.co
-# VITE_SUPABASE_ANON_KEY=your-anon-key
+npm run dev       # Vite dev server
+npm run build     # Static build (adapter-static)
+npm run preview   # Preview the static output
 ```
 
-### 3. Development
+---
 
-Start the live-reload development server in Docker:
+## Troubleshooting
 
-```bash
-docker-compose up --build
-```
+- **Rollup “Cannot find module @rollup/rollup-linux-…”**  
+  Ensure optional deps are allowed (Rollup v4 ships a platform binary as an **optional** dep):
+  ```bash
+  npm config get optional        # should be true / default
+  # if you previously disabled it:
+  npm config delete optional
+  ```
+  When using Docker dev volumes, populate `node_modules` once:
+  ```bash
+  docker compose run --rm sveltekit sh -lc 'npm ci --include=optional && npx svelte-kit sync'
+  ```
 
-* Dev UI: [http://localhost:5173](http://localhost:5173)
-* Changes to `.svelte`, JS, and CSS files reload instantly.
+- **Tailwind not applying**  
+  Make sure `app.css` is imported in `+layout.svelte`, and `@tailwindcss/vite` is in `vite.config.js`.
 
-### 4. Production Build
+- **Images don’t show on post pages**  
+  Use absolute paths like `/images/...` (assets belong in `static/images/`).  
+  `cover` in front-matter should also start with `/`.
 
-Build and run the SSR app in Docker:
+---
 
-```bash
-docker-compose -f docker-compose.prod.yml up --build -d
-```
+## License
 
-* SSR UI: [http://localhost:3000](http://localhost:3000)
-
-## 📂 Project Structure
-
-```
-myblog-template/
-├── src/
-│   ├── lib/
-│   │   └── supabaseClient.js   # Supabase client setup
-│   └── routes/
-│       ├── +layout.svelte      # Global layout with navbar & footer
-│       ├── +page.svelte        # Home landing page
-│       └── blog/
-│           ├── +page.js        # Fetch list of posts
-│           ├── +page.svelte    # Render list of posts (cards)
-│           └── [id]/
-│               ├── +page.js    # Fetch single post
-│               └── +page.svelte# Post detail with `prose` styling
-├── app.css                     # Tailwind base, components, utilities
-├── tailwind.config.js          # Tailwind + DaisyUI + plugin config
-├── postcss.config.cjs          # PostCSS with Tailwind wrapper
-├── Dockerfile                  # Production Dockerfile
-├── Dockerfile.dev              # Dev Dockerfile with live reload
-├── docker-compose.yml          # Compose for dev
-├── docker-compose.prod.yml     # Compose for prod
-├── .env.example                # Example environment variables
-└── README.md                   # This file
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m "Add my feature"`)
-4. Push to branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
-
-## 📜 License
-
-[MIT](LICENSE)
-
+MIT © You — customize as you like.
