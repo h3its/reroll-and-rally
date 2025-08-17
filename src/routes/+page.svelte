@@ -1,9 +1,11 @@
 <script>
   import Web3ContactForm from '$lib/components/Web3ContactForm.svelte';
+  export let data;
+  const recent = data.recent ?? [];
 </script>
 
 <!-- Hero -->
-<section class="min-h-[70vh] bg-base-100 text-base-content flex flex-col justify-center px-6 py-16">
+<section class="min-h-[70vh] bg-base-200 text-base-content flex flex-col justify-center px-6 py-16">
   <div class="max-w-4xl mx-auto text-center">
     <img
       src="/servoskull.svg"
@@ -26,20 +28,63 @@
 </section>
 
 <!-- Feature columns -->
-<section class="bg-base-200 py-16 px-6">
+<section class="bg-base-100 py-16 px-6">
   <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-center">
-    <div class="p-6 rounded-2xl bg-base-100 shadow-sm">
+    <div class="p-6 rounded-2xl bg-base-100">
       <h2 class="text-xl font-semibold mb-2">⚔️ Battle Reports</h2>
       <p class="text-base-content/70">Overviews and summaries of some of our best games of 40k.</p>
     </div>
-    <div class="p-6 rounded-2xl bg-base-100 shadow-sm">
+    <div class="p-6 rounded-2xl bg-base-100">
       <h2 class="text-xl font-semibold mb-2">🎨 Hobby & Painting</h2>
       <p class="text-base-content/70">Progress logs, paint recipes, 3D printing, and more.</p>
     </div>
-    <div class="p-6 rounded-2xl bg-base-100 shadow-sm">
+    <div class="p-6 rounded-2xl bg-base-100">
       <h2 class="text-xl font-semibold mb-2">📐 List Building & Strategy</h2>
       <p class="text-base-content/70">Digestible analyses of factions, rules, and matchups.</p>
     </div>
+  </div>
+</section>
+
+<!-- Recent posts -->
+<section class="bg-base-200 py-14 px-6 border-t border-base-200">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-3xl font-bold">Recent posts</h2>
+      <a href="/blog" class="btn btn-ghost">View all →</a>
+    </div>
+
+    {#if recent.length}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {#each recent as post}
+          <a href={`/blog/${post.slug}`} class="card bg-base-100 border border-base-200 hover:shadow-lg transition">
+            {#if post.cover}
+              <figure class="aspect-[16/9] overflow-hidden rounded-t-2xl">
+                <img src={post.cover} alt={post.title} class="w-full h-full object-cover" loading="lazy" />
+              </figure>
+            {/if}
+            <div class="card-body">
+              <div class="text-xs opacity-70 flex items-center justify-between">
+                <span class="truncate">{post.author}</span>
+                <time datetime={post.date}>{post.date}</time>
+              </div>
+              <h3 class="card-title mt-1">{post.title}</h3>
+              {#if post.excerpt}
+                <p class="opacity-80">{post.excerpt}</p>
+              {/if}
+              {#if post.tags?.length}
+                <div class="flex flex-wrap gap-2 mt-2">
+                  {#each post.tags.slice(0, 3) as tag}
+                    <span class="badge badge-outline">{tag}</span>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          </a>
+        {/each}
+      </div>
+    {:else}
+      <p class="opacity-70">No posts yet — check back soon!</p>
+    {/if}
   </div>
 </section>
 
