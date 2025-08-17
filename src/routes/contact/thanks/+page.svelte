@@ -2,12 +2,6 @@
   // no JS needed
 </script>
 
-<svelte:head>
-  <!-- Avoid indexing this utility page -->
-  <meta name="robots" content="noindex">
-  <title>Thanks — Re-roll & Rally</title>
-</svelte:head>
-
 <section class="min-h-[70vh] flex items-center justify-center px-6 py-16 bg-base-100">
   <div class="max-w-xl w-full">
     <div class="card bg-base-200 shadow-xl">
@@ -20,7 +14,7 @@
         </div>
         <h1 class="text-3xl font-bold">Message sent!</h1>
         <p class="text-base-content/70">
-          Thanks for reaching out. I’ll get back to you as soon as I can.
+          Thanks for reaching out. We'll get back to you as soon as we can!
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3 justify-center">
