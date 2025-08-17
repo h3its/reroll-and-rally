@@ -1,6 +1,6 @@
 import { marked } from 'marked';
 
-// load all .md files at build time
+// load all .md files at build time (keep your existing folder)
 const files = import.meta.glob('/src/posts/**/*.md', { as: 'raw', eager: true });
 
 function parseFrontmatter(raw) {
@@ -12,7 +12,17 @@ function parseFrontmatter(raw) {
     const lines = fm[1].split('\n');
     for (const line of lines) {
       const m = /^(\w+):\s*(.*)$/.exec(line.trim());
-      if (m) meta[m[1]] = m[2];
+      if (m) {
+        let val = m[2].trim();
+        // strip surrounding single/double quotes if the whole value is quoted
+        if (
+          (val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'"))
+        ) {
+          val = val.slice(1, -1);
+        }
+        meta[m[1]] = val;
+      }
     }
     body = raw.slice(fm[0].length).trimStart();
   }
@@ -23,6 +33,19 @@ function slugFromPath(path) {
   return path.split('/').pop().replace(/\.md$/, '');
 }
 
+function normalizeTags(val) {
+  if (!val) return [];
+  return val.split(',').map((t) => t.trim()).filter(Boolean);
+}
+
+function normalizeCover(val) {
+  if (!val) return '';
+  // leave absolute URLs and absolute paths alone
+  if (/^https?:\/\//i.test(val) || val.startsWith('/')) return val;
+  // strip a leading "static/" if present, then make it site-absolute
+  return '/' + val.replace(/^static\//, '');
+}
+
 export function getAllPosts() {
   const metas = [];
   for (const [path, raw] of Object.entries(files)) {
@@ -31,9 +54,10 @@ export function getAllPosts() {
       slug: slugFromPath(path),
       title: meta.title ?? slugFromPath(path),
       date: meta.date ?? new Date().toISOString().slice(0, 10),
-      tags: meta.tags ? meta.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      author: meta.author ?? 'Re-roll & Rally',                // <-- added
+      tags: normalizeTags(meta.tags),                          // CSV -> array
       excerpt: meta.excerpt,
-      cover: meta.cover
+      cover: normalizeCover(meta.cover)                        // <-- normalize
     });
   }
   // newest first
@@ -50,9 +74,10 @@ export function getPost(slug) {
     slug: slugFromPath(path),
     title: meta.title ?? slugFromPath(path),
     date: meta.date ?? new Date().toISOString().slice(0, 10),
-    tags: meta.tags ? meta.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+    author: meta.author ?? 'Re-roll & Rally',                  // <-- added
+    tags: normalizeTags(meta.tags),
     excerpt: meta.excerpt,
-    cover: meta.cover,
+    cover: normalizeCover(meta.cover),                         // <-- normalize
     html: marked.parse(body)
   };
 }

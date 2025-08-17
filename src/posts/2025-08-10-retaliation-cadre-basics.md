@@ -4,6 +4,7 @@ date: 2025-08-10
 tags: tau, tactics, 10th
 excerpt: Core sequencing and pitfalls for the Retaliation Cadre.
 cover: images/retaliation.jpg
+author: Eric "Heits" Heitmann
 ---
 
 # Opening salvo
